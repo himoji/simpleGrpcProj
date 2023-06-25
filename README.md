@@ -1,0 +1,2 @@
+# simpleGrpcProj
+server-client type
