@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package com.example.grpc;
+
+message HelloRequest {
+
+    string name = 1; // 1 = key => {1: name}
+
+    repeated string hobbies = 2;   // repeated = list 
+
+}
+
+message HelloResponce {
+    string greeting = 1;
+}
+
+service GreetingService {
+    rpc greeting (HelloRequest) returns (HelloResponce);
+}
