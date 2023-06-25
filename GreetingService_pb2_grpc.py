@@ -14,7 +14,7 @@ class GreetingServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.greeting = channel.unary_unary(
+        self.greeting = channel.unary_stream(
                 '/com.example.grpc.GreetingService/greeting',
                 request_serializer=GreetingService__pb2.HelloRequest.SerializeToString,
                 response_deserializer=GreetingService__pb2.HelloResponce.FromString,
@@ -33,7 +33,7 @@ class GreetingServiceServicer(object):
 
 def add_GreetingServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'greeting': grpc.unary_unary_rpc_method_handler(
+            'greeting': grpc.unary_stream_rpc_method_handler(
                     servicer.greeting,
                     request_deserializer=GreetingService__pb2.HelloRequest.FromString,
                     response_serializer=GreetingService__pb2.HelloResponce.SerializeToString,
@@ -59,7 +59,7 @@ class GreetingService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/com.example.grpc.GreetingService/greeting',
+        return grpc.experimental.unary_stream(request, target, '/com.example.grpc.GreetingService/greeting',
             GreetingService__pb2.HelloRequest.SerializeToString,
             GreetingService__pb2.HelloResponce.FromString,
             options, channel_credentials,
