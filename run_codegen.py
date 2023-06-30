@@ -1,3 +1,4 @@
+
 # Copyright 2015 gRPC authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,12 +14,14 @@
 # limitations under the License.
 """Runs protoc with the gRPC plugin to generate messages and gRPC stubs."""
 
+
+
 from grpc_tools import protoc
 
 protoc.main((
     '',
-    '-Iprotos',
+    '-Igrpc/protos',
     '--python_out=.',
     '--grpc_python_out=.',
-    'protos/GreetingService.proto',
+    'bank.proto',
 ))
