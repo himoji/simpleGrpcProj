@@ -1,9 +1,6 @@
-import asyncio
-import logging
-
 import grpc
-import GreetingService_pb2
-import GreetingService_pb2_grpc
+import bank_pb2
+import bank_pb2_grpc
 
 """def run():
     # NOTE(gRPC Python Team): .close() is possible on a channel and should be
@@ -30,27 +27,41 @@ if __name__ == '__main__':
     logging.basicConfig()
     runStream()"""
 
-async def run() -> None:
-    async with grpc.aio.insecure_channel("localhost:50051") as channel:
-        stub = GreetingService_pb2_grpc.GreetingServiceStub(channel)
-        # Read from an async generator
-        async for response in stub.greeting(
-            GreetingService_pb2.HelloRequest(name="you")):
-            print("Greeter client received from async generator: " +
-                response.greeting)
-            
 
-        # Direct read from the stub
-        hello_stream = stub.greeting(
-            GreetingService_pb2.HelloRequest(name="you"))
-        while True:
-            response = await hello_stream.read()
-            if response == grpc.aio.EOF:
-                break
-            print("Greeter client received from direct read: " +
-                response.greeting)
+def rundeposit() -> None:
+    with grpc.insecure_channel("localhost:50051") as channel:
+        stub = bank_pb2_grpc.bankStub(channel)
+        # Read from an generator
 
+        response = stub.deposit(bank_pb2.depositRequest(customer_id=1, cash_amount=123))
+    print(f"Validation: {response.valid}")
+
+def runwithdraw() -> None:
+    with grpc.insecure_channel("localhost:50051") as channel:
+        stub = bank_pb2_grpc.bankStub(channel)
+        # Read from an generator
+
+        response = stub.deposit(bank_pb2.withdrawRequest(customer_id=1, cash_amount=123))
+    print(f"Validation: {response.valid}")
+
+def runsend() -> None:
+    with grpc.insecure_channel("localhost:50051") as channel:
+        stub = bank_pb2_grpc.bankStub(channel)
+        # Read from an generator
+
+        response = stub.deposit(bank_pb2.sendRequest(customer_id=1, cash_amount=123, taker_id=2))
+    print(f"Validation: {response.valid}")
+
+def main() -> None:
+    match input("Deposit, withdraw, send (1,2,3): "):
+        case "1":
+            rundeposit()
+        case "2":
+            runwithdraw()
+        case "3":
+            runsend()
+        case _:
+            print("Error")
 
 if __name__ == "__main__":
-    logging.basicConfig()
-    asyncio.run(run())
+    main()

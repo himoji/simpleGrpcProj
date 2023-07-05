@@ -1,14 +1,14 @@
 
-import logging, asyncio
-import time
-
+import logging
+from concurrent.futures import ThreadPoolExecutor
 import grpc
 
+import bank_pb2_grpc, main
 
-from GreetingService_pb2 import HelloResponce
-from GreetingService_pb2 import HelloRequest
-from GreetingService_pb2_grpc import GreetingServiceServicer
-from GreetingService_pb2_grpc import add_GreetingServiceServicer_to_server
+from bank_pb2 import withdrawRequest, sendRequest
+from bank_pb2 import validationResponce
+from bank_pb2_grpc import bankServicer
+from bank_pb2_grpc import add_bankServicer_to_server
 
 """class Greeter(GreetingService_pb2_grpc.GreetingServiceServicer):
     def greeting(self, request, context):
@@ -36,27 +36,48 @@ if __name__ == '__main__':
     logging.basicConfig()
     serve()"""
 
-class Greeter(GreetingServiceServicer):
 
-    async def greeting(self, request: HelloRequest,
-                       context: grpc.aio.ServicerContext) -> HelloResponce:
-        logging.info("Serving sayHello request %s", request)
+class Servicer(bankServicer):
 
-        for i in range(10):
-            time.sleep((10-i)/10)# tf this is going 0 to 9, not 9 to 0, async???
-            yield HelloResponce(greeting=f"Hello number {i}, {request.name}!")
+    def deposit(self, request, context) -> validationResponce:
+        print("Serving deposit:")
+
+        main.atm.deposit(request.customer_id, request.cash_amount)
+
+        return validationResponce(valid="true")
+    
+    def withdraw(self, request: withdrawRequest,
+                       context) -> validationResponce:
+        print(f"Serving withdraw: {request}")
+
+        main.atm.withdraw(request.customer_id, request.cash_amount)
+
+        return validationResponce(valid="true")
+
+    def send(self, request: sendRequest,
+                       context) -> validationResponce:
+        print(f"Serving sending: {request}")
+
+        main.atm.send(request.customer_id, request.cash_amount, request.taker_id)
+
+        return validationResponce(valid="true")
 
 
-async def serve() -> None:
-    server = grpc.aio.server()
-    add_GreetingServiceServicer_to_server(Greeter(), server)
-    listen_addr = "[::]:50051"
-    server.add_insecure_port(listen_addr)
-    logging.info("Starting server on %s", listen_addr)
-    await server.start()
-    await server.wait_for_termination()
+
+def serve() -> None:
+    port = '50051'
+    server = grpc.server(ThreadPoolExecutor(max_workers=10))
+
+    bank_pb2_grpc.add_bankServicer_to_server(Servicer(), server)
+
+    server.add_insecure_port('[::]:' + port)
+    server.start()
+
+    print("Server started, listening on " + port)
+
+    server.wait_for_termination()
 
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    asyncio.run(serve())
+    serve()
